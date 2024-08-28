@@ -33,6 +33,7 @@ class LpkLoader():
         self.mlve_config = json.loads(config_mlve_raw)
 
         logger.debug(f"mlve config:\n {self.mlve_config}")
+        # Pre-STD_1_0 lpk may not have "type" key.
         self.lpkType = self.mlve_config.get("type")
         # only steam workshop lpk needs config.json to decrypt
         if self.lpkType == "STM_1_0":
@@ -60,7 +61,7 @@ class LpkLoader():
                     open(os.path.join(subdir, name), "w", encoding="utf8").write(out_s)
         else:
             try:
-                print("Deprecated/unknown lpk format detected. Attempting with STD_1_0 format...")
+                print("Deprecated/unknown lpk format detected. Attempting with (pre-)STD_1_0 format...")
                 print("Decryption may not work for some packs, even though this script outputs all files.")
                 self.encrypted = self.mlve_config.get("encrypt", "true")
                 if self.encrypted == "false":
@@ -200,10 +201,10 @@ class LpkLoader():
             return genkey(self.mlve_config["id"] + file)
         elif self.lpkType == "STD_1_0":
             return genkey(self.mlve_config["id"] + file)
+        elif self.lpkType in [None, "Live2D Model List"]:
+            return genkey("com.oukaitou.live2d.pro" + self.mlve_config["id"] + "cDaNJnUazx2B4xCYFnAPiYSyd2M=\n")
         else:
-            #return genkey("com.oukaitou.live2d.pro" + self.mlve_config["id"] + "cDaNJnUazx2B4xCYFnAPiYSyd2M=\n")
-        #else:
-            raise Exception(f"not support type {self.mlve_config['type']}")
+            raise Exception(f"not support type {self.lpkType}")
 
     def decrypt_file(self, filename) -> bytes:
         data = self.lpkfile.read(filename)
